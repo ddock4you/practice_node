@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 const morgan = require('morgan');
 const nunjucks = require('nunjucks');
-
+const dotenv = require('dotenv');
 const {
     sequelize
 } = require('./models');
@@ -21,6 +21,7 @@ sequelize.sync({
     console.error(err);
 });
 
+dotenv.config();
 app.use(morgan('dev'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
