@@ -1,4 +1,7 @@
 const Sequelize = require('sequelize');
+const {
+    User
+} = require('.');
 
 module.exports = class User extends Sequelize.Model {
     // 테이블 설정
@@ -39,6 +42,9 @@ module.exports = class User extends Sequelize.Model {
     }
     // 다른 테이블과의 관계
     static associate(db) {
-
+        db.User.hasMany(db.Comment, {
+            foreignkey: 'commenter',
+            sourceKey: 'id'
+        });
     }
 }
