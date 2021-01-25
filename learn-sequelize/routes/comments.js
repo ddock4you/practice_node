@@ -1,8 +1,5 @@
 const express = require('express');
 const {
-    route
-} = require('.');
-const {
     User,
     Comment
 } = require('../models');
@@ -16,7 +13,7 @@ router.post('/', async (req, res, next) => {
             comment: req.body.comment,
         });
         console.log(comment);
-        req.status(201).json(comment);
+        res.status(201).json(comment);
     } catch (err) {
         console.error(err);
         next(err);
@@ -37,7 +34,7 @@ router.route('/:id').patch(async (req, res, next) => {
         console.error(err);
         next(err);
     }
-}).delete(async (Req, res, next) => {
+}).delete(async (req, res, next) => {
     try {
         const result = await Comment.destroy({
             where: {

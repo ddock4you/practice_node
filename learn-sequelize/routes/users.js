@@ -40,7 +40,7 @@ router.get('/:id/comments', async (req, res, next) => {
             }
         });
         console.log(comments);
-        req.json(comments);
+        res.json(comments);
     } catch (err) {
         console.lerror(err);
         next(err);

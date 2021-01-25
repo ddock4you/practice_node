@@ -42,13 +42,10 @@ module.exports = class User extends Sequelize.Model {
     }
     // 다른 테이블과의 관계
     static associate(db) {
-<<<<<<< HEAD
-        db.User.hasMany(db.Comment, {foreignKey: 'commenter', sourceKey: 'id'});
-=======
+
         db.User.hasMany(db.Comment, {
             foreignkey: 'commenter',
             sourceKey: 'id'
         });
->>>>>>> c1ef3f86148d7e3f5834e0257fc2aaf892529b35
     }
 }
