@@ -9,20 +9,20 @@ const mysql = require('mysql');
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: 'tmdgus123!',
+    password: '비밀번호입력',
     database: 'base_sql'
 });
 
 db.connect();
 
-var app = http.createServer(function(req, res) {
+var app = http.createServer(function (req, res) {
     var _url = req.url;
     var queryData = url.parse(_url, true).query;
     var pathname = url.parse(_url, true).pathname;
     if (pathname === '/') {
         if (queryData.id === undefined) {
 
-            db.query(`SELECT * FROM topic`, function(err, results) {
+            db.query(`SELECT * FROM topic`, function (err, results) {
                 const title = 'Welcome';
                 const description = 'Hello, Node.js';
                 const list = template.list(results);
@@ -36,8 +36,8 @@ var app = http.createServer(function(req, res) {
             });
 
         } else {
-            db.query('SELECT * FROM topic', function(err, results) {
-                db.query(`SELECT * FROM topic WHERE id = ?`, [queryData.id], function(err, result) {
+            db.query('SELECT * FROM topic', function (err, results) {
+                db.query(`SELECT * FROM topic WHERE id = ?`, [queryData.id], function (err, result) {
                     const title = result[0].title;
                     const sanitizedTitle = sanitizeHtml(title);
                     const sanitizedDescription = sanitizeHtml(result[0].description, {
@@ -50,7 +50,7 @@ var app = http.createServer(function(req, res) {
                             <a href="/create">create</a>
                             <a href="/update?id=${queryData.id}">update</a>
                             <form action="delete_process" method="post">
-                            <input type="hidden" name="id" value="${sanitizedTitle}">
+                            <input type="hidden" name="id" value="${queryData.id}">
                             <input type="submit" value="delete">
                             </form>
                         `
@@ -61,10 +61,10 @@ var app = http.createServer(function(req, res) {
             });
         }
     } else if (pathname === '/create') {
-            db.query('SELECT * FROM topic', function(err, results){
-                const title = 'WEB - create';
-                const list = template.list(results);
-                const html = template.HTML(title, list, `
+        db.query('SELECT * FROM topic', function (err, results) {
+            const title = 'WEB - create';
+            const list = template.list(results);
+            const html = template.HTML(title, list, `
                     <form action="/create_process" method="post">
                     <p><input type="text" name="title" placeholder="title"></p>
                         <p>
@@ -75,27 +75,29 @@ var app = http.createServer(function(req, res) {
                         </p>
                     </form>
                     `, '');
-                res.writeHead(200);
-                res.end(html);
-            });
+            res.writeHead(200);
+            res.end(html);
+        });
     } else if (pathname === '/create_process') {
         let body = '';
-        req.on('data', function(data) {
+        req.on('data', function (data) {
             body = body + data;
         });
-        req.on('end', function() {
+        req.on('end', function () {
             const post = qs.parse(body);
             db.query(`INSERT INTO topic (title, description, created, author_id) 
-            VALUES(?,?,NOW(),?)`, [post.title, post.description, 1], function(err, create_data){
-                
-                res.writeHead(302, {Location: `/?id=${create_data.insertId}`});
+            VALUES(?,?,NOW(),?)`, [post.title, post.description, 1], function (err, create_data) {
+
+                res.writeHead(302, {
+                    Location: `/?id=${create_data.insertId}`
+                });
                 res.end();
             });
             return;
         });
     } else if (pathname === '/update') {
-        db.query(`SELECT * FROM topic`, function(err, results){
-            db.query(`SELECT * FROM topic WHERE id = ?`, [queryData.id], function(err, result){
+        db.query(`SELECT * FROM topic`, function (err, results) {
+            db.query(`SELECT * FROM topic WHERE id = ?`, [queryData.id], function (err, result) {
                 const title = result[0].title;
                 const list = template.list(results);
                 const html = template.HTML(title, list,
@@ -119,33 +121,35 @@ var app = http.createServer(function(req, res) {
         });
     } else if (pathname === '/update_process') {
         let body = '';
-        req.on('data', function(data) {
+        req.on('data', function (data) {
             body = body + data;
         });
-        req.on('end', function() {
+        req.on('end', function () {
             const post = qs.parse(body);
             console.log(post);
             db.query(`UPDATE topic SET title=?, description=?, author_id=? WHERE id = ?`,
-             [post.title, post.description, 1, post.id], function(err, result){
-                res.writeHead(302, {Location: `/?id=${post.id}`});
-                res.end();
-            });
+                [post.title, post.description, 1, post.id],
+                function (err, result) {
+                    res.writeHead(302, {
+                        Location: `/?id=${post.id}`
+                    });
+                    res.end();
+                });
         });
     } else if (pathname === '/delete_process') {
         var body = '';
-        req.on('data', function(data) {
+        req.on('data', function (data) {
             body = body + data;
         });
-        req.on('end', function() {
-            db.query(`DELETE FROM topic WHERE id = ?`, [], function(){
-                var post = qs.parse(body);
-                var id = post.id;
-                    res.writeHead(302, {
-                        Location: `/`
-                    });
-                    res.end();
+        req.on('end', function () {
+            var post = qs.parse(body);
+            db.query(`DELETE FROM topic WHERE id = ?`, [post.id], function () {
+                res.writeHead(302, {
+                    Location: `/`
+                });
+                res.end();
             });
-            
+
         });
     } else {
         res.writeHead(404);
