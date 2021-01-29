@@ -24,5 +24,11 @@ module.exports = {
     }
     list = list+'</ul>';
     return list;
+  }, select: function(values){
+    let authorSelect = "<select>";
+    authors.map(function (author, i) {
+        authorSelect +=  `<option value="${author.name}">${author.name}</option>`
+    });
+    authorSelect += "</select>";
   }
 }

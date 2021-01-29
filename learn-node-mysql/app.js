@@ -1,18 +1,9 @@
 const http = require('http');
-const fs = require('fs');
 const url = require('url');
 const qs = require('querystring');
 const template = require('./lib/template.js');
-const path = require('path');
 const sanitizeHtml = require('sanitize-html');
-const mysql = require('mysql');
-const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '비밀번호입력',
-    database: 'base_sql'
-});
-
+const db = require("./sql");
 db.connect();
 
 var app = http.createServer(function (req, res) {
@@ -37,7 +28,7 @@ var app = http.createServer(function (req, res) {
 
         } else {
             db.query('SELECT * FROM topic', function (err, results) {
-                db.query(`SELECT * FROM topic WHERE id = ?`, [queryData.id], function (err, result) {
+                db.query(`SELECT * FROM topic LEFT JOIN author ON topic.author_id = author.id WHERE topic.id = ?`, [queryData.id], function (err, result) {
                     const title = result[0].title;
                     const sanitizedTitle = sanitizeHtml(title);
                     const sanitizedDescription = sanitizeHtml(result[0].description, {
@@ -45,7 +36,7 @@ var app = http.createServer(function (req, res) {
                     });
                     const list = template.list(results);
                     const html = template.HTML(sanitizedTitle, list,
-                        `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
+                        `<h2>${sanitizedTitle}</h2>${sanitizedDescription} By ${result[0].name}`,
                         ` 
                             <a href="/create">create</a>
                             <a href="/update?id=${queryData.id}">update</a>
@@ -62,21 +53,33 @@ var app = http.createServer(function (req, res) {
         }
     } else if (pathname === '/create') {
         db.query('SELECT * FROM topic', function (err, results) {
-            const title = 'WEB - create';
-            const list = template.list(results);
-            const html = template.HTML(title, list, `
-                    <form action="/create_process" method="post">
-                    <p><input type="text" name="title" placeholder="title"></p>
-                        <p>
-                        <textarea name="description" placeholder="description"></textarea>
-                        </p>
-                        <p>
-                        <input type="submit">
-                        </p>
-                    </form>
-                    `, '');
-            res.writeHead(200);
-            res.end(html);
+            db.query(`SELECT * FROM author`, function (err, authors){
+                // console.log(authors)
+                let authorSelect = "<select>";
+                authors.map(function (author, i) {
+                    authorSelect +=  `<option value="${author.name}">${author.name}</option>`
+                });
+                authorSelect += "</select>";
+                console.log(authorSelect);
+
+                const title = 'WEB - create';
+                const list = template.list(results);
+                const html = template.HTML(title, list, `
+                        <form action="/create_process" method="post">
+                        
+                        <p><input type="text" name="title" placeholder="title"></p>
+                            <p>
+                            <textarea name="description" placeholder="description"></textarea>
+                            </p>
+                            <p>
+                            <p>${authorSelect}</p>
+                            <input type="submit">
+                            </p>
+                        </form>
+                        `, '');
+                res.writeHead(200);
+                res.end(html);
+            });
         });
     } else if (pathname === '/create_process') {
         let body = '';
