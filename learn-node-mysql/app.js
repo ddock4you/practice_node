@@ -1,159 +1,47 @@
 const http = require('http');
 const url = require('url');
 const qs = require('querystring');
-const template = require('./lib/template.js');
-const sanitizeHtml = require('sanitize-html');
 const db = require("./sql");
+const topic = require("./lib/topic");
+const author = require("./lib/author");
 db.connect();
 
 var app = http.createServer(function (req, res) {
     var _url = req.url;
     var queryData = url.parse(_url, true).query;
     var pathname = url.parse(_url, true).pathname;
+    // topic
     if (pathname === '/') {
         if (queryData.id === undefined) {
-
-            db.query(`SELECT * FROM topic`, function (err, results) {
-                const title = 'Welcome';
-                const description = 'Hello, Node.js';
-                const list = template.list(results);
-                const html = template.HTML(title, list,
-                    `<h2>${title}</h2>${description}`,
-                    `<a href="/create">create</a>`
-                );
-
-                res.writeHead(200);
-                res.end(html);
-            });
-
+            topic.home(req, res);
         } else {
-            db.query('SELECT * FROM topic', function (err, results) {
-                db.query(`SELECT * FROM topic LEFT JOIN author ON topic.author_id = author.id WHERE topic.id = ?`, [queryData.id], function (err, result) {
-                    const title = result[0].title;
-                    const sanitizedTitle = sanitizeHtml(title);
-                    const sanitizedDescription = sanitizeHtml(result[0].description, {
-                        allowedTags: ['h1']
-                    });
-                    const list = template.list(results);
-                    const html = template.HTML(sanitizedTitle, list,
-                        `<h2>${sanitizedTitle}</h2>${sanitizedDescription} By ${result[0].name}`,
-                        ` 
-                            <a href="/create">create</a>
-                            <a href="/update?id=${queryData.id}">update</a>
-                            <form action="delete_process" method="post">
-                            <input type="hidden" name="id" value="${queryData.id}">
-                            <input type="submit" value="delete">
-                            </form>
-                        `
-                    );
-                    res.writeHead(200);
-                    res.end(html);
-                });
-            });
+            topic.detail(req, res)
         }
     } else if (pathname === '/create') {
-        db.query('SELECT * FROM topic', function (err, results) {
-            db.query(`SELECT * FROM author`, function (err, authors){
-                // console.log(authors)
-                let authorSelect = "<select>";
-                authors.map(function (author, i) {
-                    authorSelect +=  `<option value="${author.name}">${author.name}</option>`
-                });
-                authorSelect += "</select>";
-                console.log(authorSelect);
-
-                const title = 'WEB - create';
-                const list = template.list(results);
-                const html = template.HTML(title, list, `
-                        <form action="/create_process" method="post">
-                        
-                        <p><input type="text" name="title" placeholder="title"></p>
-                            <p>
-                            <textarea name="description" placeholder="description"></textarea>
-                            </p>
-                            <p>
-                            <p>${authorSelect}</p>
-                            <input type="submit">
-                            </p>
-                        </form>
-                        `, '');
-                res.writeHead(200);
-                res.end(html);
-            });
-        });
+        topic.create(req, res);
     } else if (pathname === '/create_process') {
-        let body = '';
-        req.on('data', function (data) {
-            body = body + data;
-        });
-        req.on('end', function () {
-            const post = qs.parse(body);
-            db.query(`INSERT INTO topic (title, description, created, author_id) 
-            VALUES(?,?,NOW(),?)`, [post.title, post.description, 1], function (err, create_data) {
-
-                res.writeHead(302, {
-                    Location: `/?id=${create_data.insertId}`
-                });
-                res.end();
-            });
-            return;
-        });
+        topic.create_process(req, res);
     } else if (pathname === '/update') {
-        db.query(`SELECT * FROM topic`, function (err, results) {
-            db.query(`SELECT * FROM topic WHERE id = ?`, [queryData.id], function (err, result) {
-                const title = result[0].title;
-                const list = template.list(results);
-                const html = template.HTML(title, list,
-                    `
-                        <form action="/update_process" method="post">
-                        <p><input name="id" type="hidden" value="${result[0].id}"></p>
-                        <p><input type="text" name="title" placeholder="title" value="${result[0].title}"></p>
-                            <p>
-                            <textarea name="description" placeholder="description">${result[0].description}</textarea>
-                            </p>
-                            <p>
-                            <input type="submit">
-                            </p>
-                        </form>
-                    `,
-                    `<a href="/create">create</a> <a href="/update?id=${result[0].id}">update</a>`
-                );
-                res.writeHead(200);
-                res.end(html);
-            });
-        });
+        topic.update(req, res);
     } else if (pathname === '/update_process') {
-        let body = '';
-        req.on('data', function (data) {
-            body = body + data;
-        });
-        req.on('end', function () {
-            const post = qs.parse(body);
-            console.log(post);
-            db.query(`UPDATE topic SET title=?, description=?, author_id=? WHERE id = ?`,
-                [post.title, post.description, 1, post.id],
-                function (err, result) {
-                    res.writeHead(302, {
-                        Location: `/?id=${post.id}`
-                    });
-                    res.end();
-                });
-        });
+        topic.update_process(req, res);
     } else if (pathname === '/delete_process') {
-        var body = '';
-        req.on('data', function (data) {
-            body = body + data;
-        });
-        req.on('end', function () {
-            var post = qs.parse(body);
-            db.query(`DELETE FROM topic WHERE id = ?`, [post.id], function () {
-                res.writeHead(302, {
-                    Location: `/`
-                });
-                res.end();
-            });
+        topic.delete(req, res)
+    }
 
-        });
+    // author 
+    else if (pathname === '/author') {
+        author.home(req, res);
+    } else if (pathname === '/author/create') {
+        author.create_author(req, res);
+    } else if (pathname === '/author/create/create_process') {
+        author.create_author_process(req, res);
+    } else if (pathname === '/author/update') {
+        author.update_author(req, res);
+    } else if (pathname === '/author/update/update_process') {
+        author.update_author_process(req, res);
+    } else if (pathname === '/author/delete') {
+        author.delete_author(req, res);
     } else {
         res.writeHead(404);
         res.end('Not found');
