@@ -6,7 +6,7 @@ const nunjucks = require('nunjucks');
 const connect = require('./schemas');
 const indexRouter = require('./routes');
 const usersRouter = require('./routes/users');
-const commentRouter = require('./routes/comments');
+const commentsRouter = require('./routes/comments');
 
 const app = express();
 app.set('port', process.env.PORT || 3002);

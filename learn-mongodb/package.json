@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "nodemon app",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "ddock4you",
@@ -12,6 +13,7 @@
     "express": "^4.17.1",
     "mongoose": "^5.11.14",
     "morgan": "^1.10.0",
+    "nodemon": "^2.0.7",
     "nunjucks": "^3.2.2"
   }
 }

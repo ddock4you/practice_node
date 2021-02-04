@@ -64,7 +64,10 @@ async function getComment(id) {
           return alert('내용을 반드시 입력하셔야 합니다');
         }
         try {
-          await axios.patch(`/comments/${comment._id}`, { comment: newComment });
+          console.log("aaa", comment._id);
+          await axios.patch(`/comments/${comment._id}`, {
+            comment: newComment
+          });
           getComment(id);
         } catch (err) {
           console.error(err);
@@ -106,7 +109,11 @@ document.getElementById('user-form').addEventListener('submit', async (e) => {
     return alert('나이를 입력하세요');
   }
   try {
-    await axios.post('/users', { name, age, married });
+    await axios.post('/users', {
+      name,
+      age,
+      married
+    });
     getUser();
   } catch (err) {
     console.error(err);
@@ -127,7 +134,10 @@ document.getElementById('comment-form').addEventListener('submit', async (e) => 
     return alert('댓글을 입력하세요');
   }
   try {
-    await axios.post('/comments', { id, comment });
+    await axios.post('/comments', {
+      id,
+      comment
+    });
     getComment(id);
   } catch (err) {
     console.error(err);

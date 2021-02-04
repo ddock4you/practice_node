@@ -1,4 +1,4 @@
-const express = require("require");
+const express = require("express");
 const User = require("../schemas/user");
 const Comment = require("../schemas/comment");
 
